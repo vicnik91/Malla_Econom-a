@@ -1,0 +1,117 @@
+import React, { useState, useEffect } from "https://esm.sh/react";
+
+export default function MallaEconomia() {
+  const [aprobados, setAprobados] = useState(() => {
+    const saved = localStorage.getItem("cursosAprobados");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [filtro, setFiltro] = useState("todos");
+
+  const malla = [
+    { ciclo: "I", cursos: ["Lenguaje", "Matemática I", "Filosofía"] },
+    { ciclo: "II", cursos: ["Economía", "Contabilidad", "Matemática II"] },
+    { ciclo: "III", cursos: ["Microeconomía", "Estadística I"] },
+    { ciclo: "IV", cursos: ["Análisis Microeconómico", "Estadística II"] }
+  ];
+
+  const totalCursos = malla.reduce((acc, cur) => acc + cur.cursos.length, 0);
+  const progreso = ((aprobados.length / totalCursos) * 100).toFixed(1);
+
+  const toggleCurso = (curso) => {
+    setAprobados((prev) => {
+      const nuevos = prev.includes(curso)
+        ? prev.filter((c) => c !== curso)
+        : [...prev, curso];
+      localStorage.setItem("cursosAprobados", JSON.stringify(nuevos));
+      return nuevos;
+    });
+  };
+
+  const cursoVisible = (curso) => {
+    if (filtro === "todos") return true;
+    if (filtro === "aprobados") return aprobados.includes(curso);
+    if (filtro === "pendientes") return !aprobados.includes(curso);
+  };
+
+  return React.createElement("div", { style: { fontFamily: "sans-serif", padding: "1rem" } },
+    React.createElement("h1", null, "Malla Curricular de Economía (UNAP)"),
+
+    React.createElement("div", { style: { marginBottom: "1rem" } },
+      "Filtrar: ",
+      React.createElement("select", {
+        value: filtro,
+        onChange: (e) => setFiltro(e.target.value)
+      },
+        React.createElement("option", { value: "todos" }, "Todos"),
+        React.createElement("option", { value: "aprobados" }, "Aprobados"),
+        React.createElement("option", { value: "pendientes" }, "Pendientes")
+      )
+    ),
+
+    React.createElement("div", null,
+      `Progreso: ${aprobados.length}/${totalCursos} cursos (${progreso}%)`,
+      React.createElement("div", {
+        style: {
+          height: "10px",
+          backgroundColor: "#eee",
+          marginTop: "4px",
+          marginBottom: "16px",
+          borderRadius: "4px",
+          overflow: "hidden"
+        }
+      },
+        React.createElement("div", {
+          style: {
+            width: `${progreso}%`,
+            backgroundColor: "#4ade80",
+            height: "100%"
+          }
+        })
+      )
+    ),
+
+    malla.map((bloque) =>
+      React.createElement("div", { key: bloque.ciclo, style: { marginBottom: "1rem" } },
+        React.createElement("h2", null, `Ciclo ${bloque.ciclo}`),
+        bloque.cursos
+          .filter(cursoVisible)
+          .map((curso) =>
+            React.createElement("label", {
+              key: curso,
+              style: {
+                display: "block",
+                textDecoration: aprobados.includes(curso) ? "line-through" : "none",
+                color: aprobados.includes(curso) ? "#888" : "#000"
+              }
+            },
+              React.createElement("input", {
+                type: "checkbox",
+                checked: aprobados.includes(curso),
+                onChange: () => toggleCurso(curso)
+              }),
+              " ",
+              curso
+            )
+          )
+      )
+    )
+  );
+}
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Malla Economía UNAP</title>
+  </head>
+  <body style="margin: 0; padding: 1rem; font-family: sans-serif;">
+    <div id="root"></div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
+import React from "https://esm.sh/react";
+import ReactDOM from "https://esm.sh/react-dom/client";
+import MallaEconomia from "./MallaEconomia.js";
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(React.createElement(MallaEconomia));
